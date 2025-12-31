@@ -1,0 +1,65 @@
+name = "tender-analysis-system"
+main = "src/index.ts"
+compatibility_date = "2023-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Workers AI 绑定
+[ai]
+binding = "AI"
+
+# D1 数据库绑定
+[[d1_databases]]
+binding = "DB"
+database_name = "tender-analysis-db"
+database_id = "08efbfb7-0257-462f-8606-c0e96117ecf1"
+
+# KV 存储绑定
+[[kv_namespaces]]
+binding = "KV"
+id = "e69f0b6147cb4b2b87bffea5ebdab26e"
+preview_id = "28d1c190aed745268b07cf2abeabc887"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "06f37a3d8b3d4880ad2061397ddd4bb2"
+preview_id = "145fd5754e024c4e8ce4500402eabd4d"
+
+[[kv_namespaces]]
+binding = "CONFIG"
+id = "818ab12c2f65498ba52e1e324fc6e86a"
+preview_id = "d0f3d36c5f4e4786960d621a57aac3a8"
+
+# R2 对象存储绑定
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "tender-documents"
+
+# Queues 消息队列绑定
+[[queues.producers]]
+binding = "NOTIFICATION_QUEUE"
+queue = "notification-queue"
+
+[[queues.consumers]]
+queue = "notification-queue"
+max_batch_size = 10
+max_batch_timeout = 30
+
+# Cron 触发器 - 每小时抓取数据
+[triggers]
+crons = ["0 * * * *"]
+
+# 环境变量
+[vars]
+ENVIRONMENT = "development"
+API_BASE_URL = "https://tender-analysis.pages.dev"
+JIANYU_API_BASE_URL = "https://api.jianyu360.com"
+
+# 开发环境配置
+[env.development.vars]
+ENVIRONMENT = "development"
+JIANYU_API_BASE_URL = "https://api-dev.jianyu360.com"
+
+# 生产环境配置
+[env.production.vars]
+ENVIRONMENT = "production"
+JIANYU_API_BASE_URL = "https://api.jianyu360.com"

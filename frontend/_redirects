@@ -1,0 +1,7 @@
+# Cloudflare Pages redirects configuration
+
+# SPA fallback for client-side routing
+/*    /index.html   200
+
+# API proxy to backend
+/api/*  https://tender-analysis-system.dappweb.workers.dev/api/:splat  200
