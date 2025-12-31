@@ -1,14 +1,13 @@
 import { drizzle } from 'drizzle-orm/d1'
 import { eq, desc, and, gte, lte, like, count } from 'drizzle-orm'
 import * as schema from '../db/schema'
-import type { Env } from '../index'
 
 // 数据库服务类
 export class DatabaseService {
   private db: ReturnType<typeof drizzle>
 
-  constructor(env: Env) {
-    this.db = drizzle(env.DB, { schema })
+  constructor(database: D1Database) {
+    this.db = drizzle(database, { schema })
   }
 
   // 招标信息相关操作
@@ -162,6 +161,32 @@ export class DatabaseService {
       .where(eq(schema.costBenefitReport.id, id))
       .returning()
     return result[0]
+  }
+
+  async updateCostBenefitReportByTenderId(tenderId: string, data: Partial<schema.NewCostBenefitReport>): Promise<schema.CostBenefitReport | undefined> {
+    const result = await this.db
+      .update(schema.costBenefitReport)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(schema.costBenefitReport.tenderId, tenderId))
+      .returning()
+    return result[0]
+  }
+
+  async deleteCostBenefitReport(tenderId: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.costBenefitReport)
+      .where(eq(schema.costBenefitReport.tenderId, tenderId))
+    return result.success
+  }
+
+  async getAllCostBenefitReports(): Promise<schema.CostBenefitReport[]> {
+    return await this.db.select().from(schema.costBenefitReport)
+      .orderBy(desc(schema.costBenefitReport.createdAt))
+  }
+
+  // 便捷方法：通过tenderId获取招标信息
+  async getTenderById(id: string): Promise<schema.TenderInfo | undefined> {
+    return this.getTenderInfoById(id)
   }
 
   // 通知记录相关操作

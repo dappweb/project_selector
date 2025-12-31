@@ -1,7 +1,21 @@
-import type { ApiResponse, PaginatedResponse } from '../types'
+// API响应工具函数
 
-// 成功响应
-export function successResponse<T>(data?: T, message?: string): ApiResponse<T> {
+export interface SuccessResponse<T = any> {
+  success: true
+  data: T
+  message?: string
+  timestamp: string
+}
+
+export interface ErrorResponse {
+  success: false
+  error: string
+  message?: string
+  timestamp: string
+}
+
+// 创建成功响应
+export function successResponse<T>(data: T, message?: string): SuccessResponse<T> {
   return {
     success: true,
     data,
@@ -10,8 +24,8 @@ export function successResponse<T>(data?: T, message?: string): ApiResponse<T> {
   }
 }
 
-// 错误响应
-export function errorResponse(error: string, message?: string): ApiResponse {
+// 创建错误响应
+export function errorResponse(error: string, message?: string): ErrorResponse {
   return {
     success: false,
     error,
@@ -20,30 +34,28 @@ export function errorResponse(error: string, message?: string): ApiResponse {
   }
 }
 
-// 分页响应
+// 分页响应接口
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+// 创建分页响应
 export function paginatedResponse<T>(
   items: T[],
   total: number,
   page: number,
-  pageSize: number
-): PaginatedResponse<T> {
-  return {
+  pageSize: number,
+  message?: string
+): SuccessResponse<PaginatedResponse<T>> {
+  return successResponse({
     items,
     total,
     page,
     pageSize,
     totalPages: Math.ceil(total / pageSize)
-  }
-}
-
-// 验证分页参数
-export function validatePagination(page?: string, pageSize?: string) {
-  const parsedPage = Math.max(1, parseInt(page || '1'))
-  const parsedPageSize = Math.min(100, Math.max(1, parseInt(pageSize || '20')))
-  
-  return {
-    page: parsedPage,
-    pageSize: parsedPageSize,
-    offset: (parsedPage - 1) * parsedPageSize
-  }
+  }, message)
 }

@@ -3,6 +3,9 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import crawlerApp from './workers/crawler'
+import aiAnalysisApp from './workers/ai-analysis'
+import proposalGenerationApp from './workers/proposal-generation'
+import costBenefitAnalysisApp from './workers/cost-benefit-analysis'
 
 // 类型定义
 export interface Env {
@@ -51,6 +54,15 @@ app.get('/', (c) => {
 
 // 挂载数据抓取Worker
 app.route('/api/crawler', crawlerApp)
+
+// 挂载AI分析Worker
+app.route('/api/ai-analysis', aiAnalysisApp)
+
+// 挂载方案生成Worker
+app.route('/api/proposal-generation', proposalGenerationApp)
+
+// 挂载成本收益分析Worker
+app.route('/api/cost-benefit-analysis', costBenefitAnalysisApp)
 
 // AI分析路由
 app.post('/api/analysis/analyze/:tenderId', async (c) => {
