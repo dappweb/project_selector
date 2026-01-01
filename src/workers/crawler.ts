@@ -246,6 +246,113 @@ app.post('/cleanup', async (c) => {
   }
 })
 
+// 获取项目列表
+app.get('/projects', async (c) => {
+  try {
+    if (!c.env.DB) {
+      return c.json(errorResponse('数据库未配置'), 500)
+    }
+
+    const dbService = new DatabaseService(c.env.DB)
+    
+    // 获取查询参数
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '10')
+    const search = c.req.query('search')
+    const category = c.req.query('category')
+    const status = c.req.query('status')
+    
+    // 映射前端状态到数据库状态
+    const statusMap: Record<string, 'ACTIVE' | 'CLOSED' | 'AWARDED' | undefined> = {
+      'active': 'ACTIVE',
+      'completed': 'CLOSED',
+      'cancelled': 'CLOSED'
+    }
+    
+    const dbStatus = status ? statusMap[status] : undefined
+    
+    // 获取项目列表
+    const result = await dbService.getTenderInfoList({
+      page,
+      pageSize: limit,
+      status: dbStatus,
+      projectType: category, // 使用category作为projectType筛选
+      search
+    })
+    
+    // 转换数据格式以匹配前端期望
+    const projects = result.items.map(tender => ({
+      id: tender.id,
+      title: tender.title,
+      category: tender.projectType || '其他',
+      budget: tender.budget || 0,
+      status: tender.status === 'ACTIVE' ? 'active' : 
+              tender.status === 'AWARDED' ? 'completed' : 'completed',
+      createdAt: tender.createdAt?.toISOString() || new Date().toISOString(),
+      updatedAt: tender.updatedAt?.toISOString() || new Date().toISOString(),
+      description: tender.content || '',
+      deadline: tender.deadline?.toISOString(),
+      location: tender.area || ''
+    }))
+    
+    return c.json(successResponse({
+      projects,
+      pagination: {
+        page: result.page,
+        limit: result.pageSize,
+        total: result.total,
+        totalPages: result.totalPages
+      }
+    }))
+  } catch (error) {
+    console.error('Get projects error:', error)
+    return c.json(errorResponse('Failed to get projects', error instanceof Error ? error.message : 'Unknown error'), 500)
+  }
+})
+
+// 获取单个项目详情
+app.get('/projects/:id', async (c) => {
+  try {
+    if (!c.env.DB) {
+      return c.json(errorResponse('数据库未配置'), 500)
+    }
+
+    const projectId = c.req.param('id')
+    if (!projectId) {
+      return c.json(errorResponse('Project ID is required'), 400)
+    }
+
+    const dbService = new DatabaseService(c.env.DB)
+    const tender = await dbService.getTenderInfoById(projectId)
+    
+    if (!tender) {
+      return c.json(errorResponse('Project not found'), 404)
+    }
+    
+    // 转换数据格式
+    const project = {
+      id: tender.id,
+      title: tender.title,
+      category: tender.projectType || '其他',
+      budget: tender.budget || 0,
+      status: tender.status === 'ACTIVE' ? 'active' : 
+              tender.status === 'AWARDED' ? 'completed' : 'completed',
+      createdAt: tender.createdAt?.toISOString() || new Date().toISOString(),
+      updatedAt: tender.updatedAt?.toISOString() || new Date().toISOString(),
+      description: tender.content || '',
+      deadline: tender.deadline?.toISOString(),
+      location: tender.area || '',
+      purchaser: tender.purchaser || '',
+      publishTime: tender.publishTime?.toISOString()
+    }
+    
+    return c.json(successResponse(project))
+  } catch (error) {
+    console.error('Get project error:', error)
+    return c.json(errorResponse('Failed to get project', error instanceof Error ? error.message : 'Unknown error'), 500)
+  }
+})
+
 // 手动创建招标信息（用于测试）
 app.post('/create-tender', async (c) => {
   try {
