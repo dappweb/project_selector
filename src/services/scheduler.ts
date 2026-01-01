@@ -29,7 +29,7 @@ export class SchedulerService {
 
   constructor(env: Env) {
     this.env = env
-    this.dbService = new DatabaseService(env)
+    this.dbService = new DatabaseService(env.DB)
     this.apiClient = new JianyuApiClient(env)
     this.retryConfig = {
       maxRetries: 3,

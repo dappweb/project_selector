@@ -44,7 +44,7 @@ export class AIAnalysisService {
 
   constructor(env: Env) {
     this.env = env
-    this.dbService = new DatabaseService(env)
+    this.dbService = new DatabaseService(env.DB)
   }
 
   // 使用Qwen模型进行项目分类

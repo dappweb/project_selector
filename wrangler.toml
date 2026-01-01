@@ -39,10 +39,105 @@ bucket_name = "tender-documents"
 binding = "NOTIFICATION_QUEUE"
 queue = "notification-queue"
 
+[[queues.producers]]
+binding = "WORKER_COMMUNICATION_QUEUE"
+queue = "worker-communication-queue"
+
 [[queues.consumers]]
 queue = "notification-queue"
 max_batch_size = 10
 max_batch_timeout = 30
+
+[[queues.consumers]]
+queue = "worker-communication-queue"
+max_batch_size = 5
+max_batch_timeout = 15
+
+# Service Bindings for Worker Communication (生产环境)
+[env.production]
+# AI 绑定
+[env.production.ai]
+binding = "AI"
+
+# D1 数据库绑定
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "tender-analysis-db"
+database_id = "08efbfb7-0257-462f-8606-c0e96117ecf1"
+
+# KV 存储绑定
+[[env.production.kv_namespaces]]
+binding = "KV"
+id = "e69f0b6147cb4b2b87bffea5ebdab26e"
+preview_id = "28d1c190aed745268b07cf2abeabc887"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "06f37a3d8b3d4880ad2061397ddd4bb2"
+preview_id = "145fd5754e024c4e8ce4500402eabd4d"
+
+[[env.production.kv_namespaces]]
+binding = "CONFIG"
+id = "818ab12c2f65498ba52e1e324fc6e86a"
+preview_id = "d0f3d36c5f4e4786960d621a57aac3a8"
+
+# R2 对象存储绑定
+[[env.production.r2_buckets]]
+binding = "STORAGE"
+bucket_name = "tender-documents"
+
+# Queues 消息队列绑定
+[[env.production.queues.producers]]
+binding = "NOTIFICATION_QUEUE"
+queue = "notification-queue"
+
+[[env.production.queues.producers]]
+binding = "WORKER_COMMUNICATION_QUEUE"
+queue = "worker-communication-queue"
+
+# Queue consumers (commented out for initial deployment)
+# [[env.production.queues.consumers]]
+# queue = "notification-queue"
+# max_batch_size = 10
+# max_batch_timeout = 30
+
+# [[env.production.queues.consumers]]
+# queue = "worker-communication-queue"
+# max_batch_size = 5
+# max_batch_timeout = 15
+
+# Service Bindings (commented out for initial deployment)
+# [[env.production.services]]
+# binding = "CRAWLER_SERVICE"
+# service = "tender-analysis-crawler"
+
+# [[env.production.services]]
+# binding = "AI_ANALYSIS_SERVICE"
+# service = "tender-analysis-ai"
+
+# [[env.production.services]]
+# binding = "PROPOSAL_SERVICE"
+# service = "tender-analysis-proposal"
+
+# [[env.production.services]]
+# binding = "COST_BENEFIT_SERVICE"
+# service = "tender-analysis-cost-benefit"
+
+# [[env.production.services]]
+# binding = "DATA_ANALYTICS_SERVICE"
+# service = "tender-analysis-analytics"
+
+# [[env.production.services]]
+# binding = "REPORT_SERVICE"
+# service = "tender-analysis-reports"
+
+# [[env.production.services]]
+# binding = "PROJECT_TRACKING_SERVICE"
+# service = "tender-analysis-tracking"
+
+# [[env.production.services]]
+# binding = "NOTIFICATION_SERVICE"
+# service = "tender-analysis-notifications"
 
 # Cron 触发器 - 每小时抓取数据
 [triggers]
@@ -62,4 +157,5 @@ JIANYU_API_BASE_URL = "https://api-dev.jianyu360.com"
 # 生产环境配置
 [env.production.vars]
 ENVIRONMENT = "production"
+API_BASE_URL = "https://tender-analysis.pages.dev"
 JIANYU_API_BASE_URL = "https://api.jianyu360.com"

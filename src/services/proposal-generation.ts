@@ -99,7 +99,7 @@ export class ProposalGenerationService {
 
   constructor(env: Env) {
     this.env = env
-    this.dbService = new DatabaseService(env)
+    this.dbService = new DatabaseService(env.DB)
   }
 
   // 分析项目需求

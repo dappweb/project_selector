@@ -24,7 +24,7 @@ app.post('/generate/:tenderId', async (c) => {
     }
 
     const proposalService = new ProposalGenerationService(c.env)
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 检查项目是否存在
     const tender = await dbService.getTenderInfoById(tenderId)
@@ -101,7 +101,7 @@ app.get('/proposal/:tenderId', async (c) => {
       return c.json(errorResponse('Tender ID is required'), 400)
     }
 
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 获取方案文档
     const proposal = await dbService.getProposalDocumentByTenderId(tenderId)
@@ -134,7 +134,7 @@ app.post('/auto-generate', async (c) => {
   try {
     const { limit = 5, minScore = 70 } = await c.req.json()
     
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     const proposalService = new ProposalGenerationService(c.env)
     
     // 获取高价值项目（这里简化实现，实际应该根据分析评分筛选）
@@ -205,7 +205,7 @@ app.post('/regenerate/:tenderId', async (c) => {
     }
 
     const proposalService = new ProposalGenerationService(c.env)
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 检查项目是否存在
     const tender = await dbService.getTenderInfoById(tenderId)
@@ -253,7 +253,7 @@ app.post('/analyze-requirement/:tenderId', async (c) => {
     }
 
     const proposalService = new ProposalGenerationService(c.env)
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 检查项目是否存在
     const tender = await dbService.getTenderInfoById(tenderId)
@@ -330,7 +330,7 @@ app.post('/generate-commercial-proposal', async (c) => {
 // 创建测试数据（仅用于开发测试）
 app.post('/create-test-proposal', async (c) => {
   try {
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 确保测试项目存在
     const testTender = {
@@ -393,7 +393,7 @@ app.post('/generate-document/:tenderId', async (c) => {
       return c.json(errorResponse('Tender ID is required'), 400)
     }
 
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     const documentService = new DocumentGenerationService(c.env)
     
     // 获取招标信息

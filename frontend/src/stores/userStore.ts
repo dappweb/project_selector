@@ -1,92 +1,110 @@
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { User, UserPreferences, Notification } from '@/types';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
-interface UserStore {
-  // State
-  user: User | null;
-  preferences: UserPreferences;
-  notifications: Notification[];
-  
-  // Actions
-  setUser: (user: User | null) => void;
-  updatePreferences: (prefs: Partial<UserPreferences>) => void;
-  addNotification: (notification: Notification) => void;
-  markNotificationAsRead: (id: string) => void;
-  removeNotification: (id: string) => void;
-  clearNotifications: () => void;
-  
-  // Computed
-  unreadNotifications: () => Notification[];
-  unreadCount: () => number;
+export interface User {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+  role: 'admin' | 'user' | 'viewer'
+  permissions: string[]
 }
 
-const defaultPreferences: UserPreferences = {
-  theme: 'light',
-  language: 'zh-CN',
-  notifications: {
-    email: true,
-    browser: true,
-    highValueProjects: true,
-    deadlineReminders: true,
-  },
-  dashboard: {
-    defaultView: 'grid',
-    itemsPerPage: 20,
-    autoRefresh: true,
-    refreshInterval: 30000, // 30 seconds
-  },
-};
+export interface Notification {
+  id: string
+  title: string
+  content: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  read: boolean
+  createdAt: string
+}
 
-export const useUserStore = create<UserStore>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        // Initial state
-        user: null,
-        preferences: defaultPreferences,
-        notifications: [],
+interface UserState {
+  user: User | null
+  notifications: Notification[]
+  isAuthenticated: boolean
+  
+  // Actions
+  setUser: (user: User | null) => void
+  login: (email: string, password: string) => Promise<boolean>
+  logout: () => void
+  addNotification: (notification: Omit<Notification, 'id' | 'createdAt'>) => void
+  markNotificationAsRead: (id: string) => void
+  clearNotifications: () => void
+  unreadCount: () => number
+}
 
-        // Actions
-        setUser: (user) => set({ user }),
+export const useUserStore = create<UserState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      notifications: [],
+      isAuthenticated: false,
+
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
+
+      login: async (email: string, password: string) => {
+        try {
+          // 模拟登录API调用
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+          // 模拟用户数据
+          const mockUser: User = {
+            id: '1',
+            name: '管理员',
+            email,
+            avatar: undefined,
+            role: 'admin',
+            permissions: ['read', 'write', 'admin']
+          }
+          
+          set({ user: mockUser, isAuthenticated: true })
+          return true
+        } catch (error) {
+          console.error('Login failed:', error)
+          return false
+        }
+      },
+
+      logout: () => {
+        set({ user: null, isAuthenticated: false, notifications: [] })
+      },
+
+      addNotification: (notification) => {
+        const newNotification: Notification = {
+          ...notification,
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString(),
+          read: false
+        }
         
-        updatePreferences: (prefs) => set((state) => ({
-          preferences: { ...state.preferences, ...prefs }
-        })),
-        
-        addNotification: (notification) => set((state) => ({
-          notifications: [notification, ...state.notifications]
-        })),
-        
-        markNotificationAsRead: (id) => set((state) => ({
-          notifications: state.notifications.map(notification =>
-            notification.id === id ? { ...notification, read: true } : notification
+        set(state => ({
+          notifications: [newNotification, ...state.notifications]
+        }))
+      },
+
+      markNotificationAsRead: (id) => {
+        set(state => ({
+          notifications: state.notifications.map(n => 
+            n.id === id ? { ...n, read: true } : n
           )
-        })),
-        
-        removeNotification: (id) => set((state) => ({
-          notifications: state.notifications.filter(notification => notification.id !== id)
-        })),
-        
-        clearNotifications: () => set({ notifications: [] }),
+        }))
+      },
 
-        // Computed
-        unreadNotifications: () => {
-          const { notifications } = get();
-          return notifications.filter(notification => !notification.read);
-        },
-        
-        unreadCount: () => {
-          const { notifications } = get();
-          return notifications.filter(notification => !notification.read).length;
-        },
-      }),
-      {
-        name: 'user-store',
+      clearNotifications: () => {
+        set({ notifications: [] })
+      },
+
+      unreadCount: () => {
+        return get().notifications.filter(n => !n.read).length
       }
-    ),
+    }),
     {
-      name: 'user-store',
+      name: 'user-storage',
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated
+      })
     }
   )
-);
+)

@@ -23,7 +23,7 @@ app.post('/analyze/:tenderId', async (c) => {
     }
 
     const aiService = new AIAnalysisService(c.env)
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 检查项目是否存在
     const tender = await dbService.getTenderInfoById(tenderId)
@@ -100,7 +100,7 @@ app.get('/result/:tenderId', async (c) => {
       return c.json(errorResponse('Tender ID is required'), 400)
     }
 
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 获取分析结果
     const analysis = await dbService.getProjectAnalysisByTenderId(tenderId)
@@ -133,7 +133,7 @@ app.post('/auto-analyze', async (c) => {
   try {
     const { limit = 10 } = await c.req.json()
     
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     const aiService = new AIAnalysisService(c.env)
     
     // 获取未分析的项目
@@ -204,7 +204,7 @@ app.post('/reanalyze/:tenderId', async (c) => {
     }
 
     const aiService = new AIAnalysisService(c.env)
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 检查项目是否存在
     const tender = await dbService.getTenderInfoById(tenderId)
@@ -286,7 +286,7 @@ app.get('/models', async (c) => {
 // 创建测试数据（仅用于开发测试）
 app.post('/create-test-data', async (c) => {
   try {
-    const dbService = new DatabaseService(c.env)
+    const dbService = new DatabaseService(c.env.DB)
     
     // 创建测试招标项目
     const testTender = {

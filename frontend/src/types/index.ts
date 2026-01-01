@@ -1,133 +1,166 @@
-// 招标项目数据模型
-export interface TenderProject {
-  id: string;
-  title: string;
-  content: string;
-  budget: number;
-  publishTime: string;
-  deadline: string;
-  purchaser: string;
-  area: string;
-  projectType: string;
-  status: 'active' | 'closed' | 'awarded';
-  aiScore?: number;
-  competitiveness?: 'low' | 'medium' | 'high';
-  matchScore?: number;
-}
+// 通用类型定义
 
-// 分析结果数据模型
-export interface AnalysisResult {
-  projectId: string;
-  overallScore: number;
-  costBenefitRatio: number;
-  technicalMatch: number;
-  competitionLevel: number;
-  riskAssessment: RiskLevel;
-  recommendations: string[];
-  generatedAt: string;
-}
-
-// 风险等级
-export type RiskLevel = 'low' | 'medium' | 'high';
-
-// 系统状态数据模型
-export interface SystemStatus {
-  crawlerStatus: 'running' | 'stopped' | 'error';
-  lastCrawlTime: string;
-  totalProjects: number;
-  todayNewProjects: number;
-  systemHealth: 'healthy' | 'warning' | 'error';
-}
-
-// 项目筛选条件
-export interface ProjectFilters {
-  keyword?: string;
-  budgetRange?: [number, number];
-  projectType?: string;
-  area?: string;
-  status?: TenderProject['status'];
-  dateRange?: [string, string];
-}
-
-// 用户信息
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'user' | 'viewer';
-  avatar?: string;
-}
-
-// 用户偏好设置
-export interface UserPreferences {
-  theme: 'light' | 'dark' | 'auto';
-  language: 'zh-CN' | 'en-US';
-  notifications: {
-    email: boolean;
-    browser: boolean;
-    highValueProjects: boolean;
-    deadlineReminders: boolean;
-  };
-  dashboard: {
-    defaultView: 'grid' | 'list';
-    itemsPerPage: number;
-    autoRefresh: boolean;
-    refreshInterval: number;
-  };
-}
-
-// 通知数据模型
-export interface Notification {
-  id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  title: string;
-  message: string;
-  timestamp: string;
-  read: boolean;
-  actionUrl?: string;
-}
-
-// 图表数据类型
-export interface TimeSeriesData {
-  date: string;
-  value: number;
-  category?: string;
-}
-
-export interface ChartData {
-  name: string;
-  value: number;
-  color?: string;
-}
-
-// 分页配置
-export interface PaginationConfig {
-  current: number;
-  pageSize: number;
-  total: number;
-  showSizeChanger?: boolean;
-  showQuickJumper?: boolean;
-}
-
-// API响应类型
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
-
-// 面包屑导航项
 export interface BreadcrumbItem {
-  title: string;
-  href?: string;
+  title: string
+  href?: string
 }
 
-// 菜单项
-export interface MenuItem {
-  key: string;
-  label: string;
-  icon?: React.ReactNode;
-  children?: MenuItem[];
-  href?: string;
+export interface ApiResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+  timestamp?: string
+}
+
+export interface PaginationParams {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+export interface TableColumn {
+  key: string
+  title: string
+  dataIndex?: string
+  width?: number
+  align?: 'left' | 'center' | 'right'
+  sorter?: boolean
+  render?: (value: any, record: any, index: number) => React.ReactNode
+}
+
+export interface FilterOption {
+  label: string
+  value: string | number
+}
+
+export interface ChartDataPoint {
+  name: string
+  value: number
+  [key: string]: any
+}
+
+export interface DateRange {
+  start: string
+  end: string
+}
+
+// 项目相关类型
+export interface ProjectCategory {
+  id: string
+  name: string
+  description?: string
+  count?: number
+}
+
+export interface ProjectStatus {
+  key: 'active' | 'completed' | 'cancelled' | 'pending'
+  label: string
+  color: string
+}
+
+// 分析相关类型
+export interface AnalysisResult {
+  id: string
+  projectId: string
+  score: number
+  classification: string
+  keywords: string[]
+  competitors: string[]
+  recommendations: string[]
+  createdAt: string
+}
+
+export interface CostBenefitAnalysis {
+  id: string
+  projectId: string
+  totalCost: number
+  expectedRevenue: number
+  roi: number
+  paybackPeriod: number
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
+  scenarios: {
+    optimistic: number
+    realistic: number
+    pessimistic: number
+  }
+  createdAt: string
+}
+
+// 报告相关类型
+export interface ReportTemplate {
+  id: string
+  name: string
+  type: 'monthly' | 'quarterly' | 'annual' | 'custom'
+  description: string
+  sections: string[]
+}
+
+export interface Report {
+  id: string
+  title: string
+  type: string
+  period: string
+  status: 'generating' | 'completed' | 'failed'
+  generatedAt: string
+  downloadUrls?: {
+    pdf?: string
+    excel?: string
+  }
+}
+
+// 系统配置类型
+export interface SystemConfig {
+  crawlerInterval: number
+  apiTimeout: number
+  maxRetries: number
+  enableNotifications: boolean
+  notificationChannels: string[]
+}
+
+// 用户权限类型
+export type Permission = 
+  | 'read'
+  | 'write' 
+  | 'delete'
+  | 'admin'
+  | 'crawler:start'
+  | 'crawler:stop'
+  | 'analysis:run'
+  | 'report:generate'
+  | 'report:export'
+
+// 通知类型
+export type NotificationType = 'info' | 'success' | 'warning' | 'error'
+
+// 图表类型
+export type ChartType = 'line' | 'bar' | 'pie' | 'area' | 'scatter'
+
+// 导出格式
+export type ExportFormat = 'pdf' | 'excel' | 'csv' | 'json'
+
+// 排序方向
+export type SortOrder = 'asc' | 'desc'
+
+// 筛选操作符
+export type FilterOperator = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'in'
+
+export interface FilterCondition {
+  field: string
+  operator: FilterOperator
+  value: any
+}
+
+export interface SortCondition {
+  field: string
+  order: SortOrder
+}
+
+export interface QueryParams {
+  page?: number
+  limit?: number
+  search?: string
+  filters?: FilterCondition[]
+  sort?: SortCondition[]
 }

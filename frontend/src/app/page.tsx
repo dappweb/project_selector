@@ -11,17 +11,20 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons';
 import MainLayout from '@/components/layout/MainLayout';
-import { useSystemStatus, useStatistics } from '@/hooks/useProjects';
+import { useSystemStatus, useStatistics, useCrawlerStart } from '@/hooks/useProjects';
+import { formatCurrency, formatTimeAgo } from '@/utils/format';
 
 export default function HomePage() {
   const { data: systemStatus, isLoading: statusLoading } = useSystemStatus();
   const { data: statistics, isLoading: statsLoading } = useStatistics();
+  const crawlerStartMutation = useCrawlerStart();
 
   const quickActions = [
     {
       title: '启动数据抓取',
       icon: <PlayCircleOutlined />,
-      action: () => console.log('Start crawler'),
+      action: () => crawlerStartMutation.mutate(),
+      loading: crawlerStartMutation.isPending,
     },
     {
       title: '生成分析报告',
@@ -42,6 +45,7 @@ export default function HomePage() {
                 type="primary"
                 icon={action.icon}
                 size="large"
+                loading={action.loading}
                 onClick={action.action}
               >
                 {action.title}
@@ -76,10 +80,9 @@ export default function HomePage() {
             <Card>
               <Statistic
                 title="平均项目价值"
-                value={1250000}
+                value={statistics?.data?.averageValue || 1250000}
                 prefix={<DollarOutlined />}
-                suffix="元"
-                precision={0}
+                formatter={(value) => formatCurrency(Number(value))}
                 loading={statsLoading}
               />
             </Card>
@@ -88,7 +91,7 @@ export default function HomePage() {
             <Card>
               <Statistic
                 title="中标率"
-                value={68.5}
+                value={statistics?.data?.winRate || 68.5}
                 prefix={<TrophyOutlined />}
                 suffix="%"
                 precision={1}
@@ -124,7 +127,7 @@ export default function HomePage() {
             <Col xs={24} sm={8}>
               <Statistic
                 title="最后更新时间"
-                value={systemStatus?.data?.lastCrawlTime ? new Date(systemStatus.data.lastCrawlTime).toLocaleString('zh-CN') : '暂无数据'}
+                value={systemStatus?.data?.lastCrawlTime ? formatTimeAgo(systemStatus.data.lastCrawlTime) : '暂无数据'}
                 loading={statusLoading}
               />
             </Col>

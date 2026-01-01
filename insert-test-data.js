@@ -11,7 +11,8 @@ async function insertTestData() {
     }
     
     // 由于没有真实API，我们直接调用手动抓取来创建测试数据
-    const response = await fetch('http://localhost:8787/api/crawler/manual-fetch', {
+    const API_BASE_URL = process.env.API_BASE_URL || 'https://tender-analysis-system-production.dappweb.workers.dev'
+    const response = await fetch(`${API_BASE_URL}/api/crawler/manual-fetch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

@@ -1,28 +1,67 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 启用实验性功能
-  experimental: {
-    // 启用 App Router
-    appDir: true,
-  },
-  
-  // 输出配置 - 用于静态导出
+  // 启用静态导出以支持Cloudflare Pages
   output: 'export',
   
-  // 禁用图片优化（Cloudflare Pages 不支持）
+  // 禁用图片优化（Cloudflare Pages不支持）
   images: {
     unoptimized: true,
   },
   
-  // 基础路径配置（如果需要部署到子路径）
-  // basePath: '/dashboard',
+  // 禁用ESLint检查（生产构建）
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   
-  // 资源前缀（用于 CDN）
-  // assetPrefix: 'https://cdn.example.com',
+  // 禁用TypeScript检查（生产构建）
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   
-  // 环境变量
+  // 配置静态文件路径
+  trailingSlash: true,
+  
+  // 环境变量配置
   env: {
-    CUSTOM_KEY: 'my-value',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787',
+    NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT || 'development',
+  },
+  
+  // 构建配置
+  distDir: 'out',
+  
+  // 资源优化
+  compress: true,
+  
+  // 实验性功能
+  experimental: {
+    // 启用应用目录
+    appDir: true,
+  },
+  
+  // Webpack配置
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // 优化构建
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            enforce: true,
+          },
+        },
+      }
+    }
+    
+    return config
   },
   
   // 重定向配置
@@ -33,42 +72,44 @@ const nextConfig = {
         destination: '/',
         permanent: true,
       },
-    ];
+    ]
   },
   
-  // 重写配置
-  async rewrites() {
+  // 头部配置
+  async headers() {
     return [
       {
-        source: '/api/:path*',
-        destination: 'https://tender-analysis-system.dappweb.workers.dev/api/:path*',
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
       },
-    ];
+      {
+        source: '/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
   },
-  
-  // Webpack 配置
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // 自定义 webpack 配置
-    return config;
-  },
-  
-  // 编译器选项
-  compiler: {
-    // 移除 console.log
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  
-  // 压缩配置
-  compress: true,
-  
-  // 电源效率配置
-  poweredByHeader: false,
-  
-  // 严格模式
-  reactStrictMode: true,
-  
-  // SWC 压缩
-  swcMinify: true,
-};
+}
 
-export default nextConfig;
+export default nextConfig

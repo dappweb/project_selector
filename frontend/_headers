@@ -1,14 +1,64 @@
-# Cloudflare Pages headers configuration
+# Cloudflare Pages Headers配置
 
+# 全局安全头部
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
+# 静态资源缓存
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 
-/static/*
+# 图片资源缓存
+/images/*
+  Cache-Control: public, max-age=86400
+
+# API代理缓存
+/api/*
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# 字体文件缓存
+/fonts/*
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# CSS和JS文件缓存
+*.css
+  Cache-Control: public, max-age=86400
+  Content-Type: text/css
+
+*.js
+  Cache-Control: public, max-age=86400
+  Content-Type: application/javascript
+
+# HTML文件缓存
+*.html
+  Cache-Control: public, max-age=3600
+
+# JSON文件缓存
+*.json
+  Cache-Control: public, max-age=3600
+  Content-Type: application/json
+
+# 图标文件缓存
+*.ico
+  Cache-Control: public, max-age=86400
+
+# PWA相关文件
+/manifest.json
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# 安全相关文件
+/robots.txt
+  Cache-Control: public, max-age=86400
+
+/sitemap.xml
+  Cache-Control: public, max-age=86400

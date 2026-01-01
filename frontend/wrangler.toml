@@ -1,0 +1,22 @@
+# Cloudflare Pages配置文件
+name = "tender-analysis-frontend"
+compatibility_date = "2024-12-31"
+pages_build_output_dir = "out"
+
+# 环境变量
+[env.production.vars]
+NEXT_PUBLIC_API_URL = "https://tender-analysis-system-production.dappweb.workers.dev"
+NEXT_PUBLIC_ENVIRONMENT = "production"
+
+[env.preview.vars]
+NEXT_PUBLIC_API_URL = "https://tender-analysis-system-production.dappweb.workers.dev"
+NEXT_PUBLIC_ENVIRONMENT = "preview"
+
+# Pages Functions配置
+[[env.production.services]]
+binding = "API"
+service = "tender-analysis-system-production"
+
+[[env.preview.services]]
+binding = "API"
+service = "tender-analysis-system-production"
