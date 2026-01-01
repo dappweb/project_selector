@@ -6,6 +6,11 @@ import crawlerApp from './workers/crawler'
 import aiAnalysisApp from './workers/ai-analysis'
 import proposalGenerationApp from './workers/proposal-generation'
 import costBenefitAnalysisApp from './workers/cost-benefit-analysis'
+import dataAnalyticsApp from './workers/data-analytics'
+import reportGenerationApp from './workers/report-generation'
+import projectTrackingApp from './workers/project-tracking'
+import notificationApp from './workers/notification'
+import workerCommunicationApp from './workers/worker-communication'
 
 // 类型定义
 export interface Env {
@@ -17,6 +22,17 @@ export interface Env {
   CONFIG: KVNamespace
   STORAGE: R2Bucket
   NOTIFICATION_QUEUE: Queue
+  WORKER_COMMUNICATION_QUEUE: Queue
+  
+  // Service Bindings for Worker Communication
+  CRAWLER_SERVICE?: Fetcher
+  AI_ANALYSIS_SERVICE?: Fetcher
+  PROPOSAL_SERVICE?: Fetcher
+  COST_BENEFIT_SERVICE?: Fetcher
+  DATA_ANALYTICS_SERVICE?: Fetcher
+  REPORT_SERVICE?: Fetcher
+  PROJECT_TRACKING_SERVICE?: Fetcher
+  NOTIFICATION_SERVICE?: Fetcher
   
   // 环境变量
   ENVIRONMENT: string
@@ -64,6 +80,21 @@ app.route('/api/proposal-generation', proposalGenerationApp)
 // 挂载成本收益分析Worker
 app.route('/api/cost-benefit-analysis', costBenefitAnalysisApp)
 
+// 挂载数据分析Worker
+app.route('/api/data-analytics', dataAnalyticsApp)
+
+// 挂载报表生成Worker
+app.route('/api/report-generation', reportGenerationApp)
+
+// 挂载项目跟踪Worker
+app.route('/api/project-tracking', projectTrackingApp)
+
+// 挂载通知Worker
+app.route('/api/notification', notificationApp)
+
+// 挂载Workers间通信Worker
+app.route('/api/worker-communication', workerCommunicationApp)
+
 // AI分析路由
 app.post('/api/analysis/analyze/:tenderId', async (c) => {
   try {
@@ -95,42 +126,7 @@ app.post('/api/analysis/analyze/:tenderId', async (c) => {
   }
 })
 
-// 通知路由
-app.post('/api/notification/send', async (c) => {
-  try {
-    const { type, recipient, subject, content, channel } = await c.req.json()
-    
-    if (!type || !recipient || !subject || !content || !channel) {
-      return c.json({
-        success: false,
-        error: '通知参数不完整'
-      }, 400)
-    }
-    
-    const queue = c.env?.NOTIFICATION_QUEUE as Queue | undefined
-    await queue?.send({
-      type,
-      recipient,
-      subject,
-      content,
-      channel,
-      timestamp: new Date().toISOString()
-    })
-    
-    return c.json({
-      success: true,
-      message: '通知已加入发送队列',
-      timestamp: new Date().toISOString()
-    })
-  } catch (error) {
-    console.error('Send notification error:', error)
-    return c.json({
-      success: false,
-      error: '发送通知失败',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, 500)
-  }
-})
+// Note: Notification routes are handled by the notification worker mounted at /api/notification
 
 // 错误处理
 app.onError((err, c) => {
@@ -178,7 +174,15 @@ const worker: ExportedHandler<Env> = {
     
     for (const message of batch.messages) {
       try {
-        await processNotificationMessage(message.body, env)
+        // 根据队列类型处理不同的消息
+        if (batch.queue === 'notification-queue') {
+          await processNotificationMessage(message.body, env)
+        } else if (batch.queue === 'worker-communication-queue') {
+          await processWorkerCommunicationMessage(message.body, env)
+        } else {
+          console.warn('Unknown queue:', batch.queue)
+        }
+        
         message.ack()
       } catch (error) {
         console.error('Queue message processing error:', error)
@@ -190,8 +194,26 @@ const worker: ExportedHandler<Env> = {
 
 // 通知消息处理函数
 async function processNotificationMessage(messageBody: any, env: Env): Promise<void> {
-  console.log('Processing notification:', messageBody)
-  // 这里会在后续任务中实现具体的通知逻辑
+  try {
+    const { NotificationService } = await import('./services/notification')
+    const service = new NotificationService(env)
+    await service.processQueueMessage(messageBody)
+  } catch (error) {
+    console.error('Process notification message error:', error)
+    throw error
+  }
+}
+
+// Workers间通信消息处理函数
+async function processWorkerCommunicationMessage(messageBody: any, env: Env): Promise<void> {
+  try {
+    const { WorkerCommunicationService } = await import('./services/worker-communication')
+    const service = new WorkerCommunicationService(env)
+    await service.processQueueMessage(messageBody)
+  } catch (error) {
+    console.error('Process worker communication message error:', error)
+    throw error
+  }
 }
 
 export default worker

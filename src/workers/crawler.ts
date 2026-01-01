@@ -17,7 +17,11 @@ app.use('*', logger())
 // 启动数据抓取
 app.post('/start', async (c) => {
   try {
-    const dbService = new DatabaseService(c.env)
+    if (!c.env.DB) {
+      return c.json(errorResponse('数据库未配置'), 500)
+    }
+    
+    const dbService = new DatabaseService(c.env.DB)
     const apiClient = new JianyuApiClient(c.env)
     
     // 获取最新的招标信息
@@ -68,7 +72,11 @@ app.post('/start', async (c) => {
 // 获取抓取状态
 app.get('/status', async (c) => {
   try {
-    const dbService = new DatabaseService(c.env)
+    if (!c.env.DB) {
+      return c.json(errorResponse('数据库未配置'), 500)
+    }
+    
+    const dbService = new DatabaseService(c.env.DB)
     const scheduler = new SchedulerService(c.env)
     
     // 获取最近的抓取统计
@@ -102,7 +110,11 @@ app.post('/manual-fetch', async (c) => {
       return c.json(errorResponse('Keyword is required'), 400)
     }
     
-    const dbService = new DatabaseService(c.env)
+    if (!c.env.DB) {
+      return c.json(errorResponse('数据库未配置'), 500)
+    }
+    
+    const dbService = new DatabaseService(c.env.DB)
     const apiClient = new JianyuApiClient(c.env)
     
     // 根据关键词搜索招标信息
@@ -231,6 +243,37 @@ app.post('/cleanup', async (c) => {
   } catch (error) {
     console.error('Cleanup error:', error)
     return c.json(errorResponse('Failed to cleanup tasks', error instanceof Error ? error.message : 'Unknown error'), 500)
+  }
+})
+
+// 手动创建招标信息（用于测试）
+app.post('/create-tender', async (c) => {
+  try {
+    if (!c.env.DB) {
+      return c.json(errorResponse('数据库未配置'), 500)
+    }
+    
+    const tenderData = await c.req.json()
+    const dbService = new DatabaseService(c.env.DB)
+    
+    // 创建招标信息
+    const tender = await dbService.createTenderInfo({
+      id: tenderData.id || `tender-${Date.now()}`,
+      title: tenderData.title,
+      content: tenderData.description || tenderData.content,
+      budget: tenderData.budget,
+      publishTime: new Date(tenderData.publishDate || Date.now()),
+      deadline: new Date(tenderData.deadline),
+      purchaser: tenderData.purchaser || '测试采购方',
+      area: tenderData.area || '北京',
+      projectType: tenderData.category || '软件开发',
+      status: tenderData.status || 'ACTIVE'
+    })
+    
+    return c.json(successResponse(tender, '招标信息创建成功'))
+  } catch (error) {
+    console.error('Create tender error:', error)
+    return c.json(errorResponse('Failed to create tender', error instanceof Error ? error.message : 'Unknown error'), 500)
   }
 })
 
