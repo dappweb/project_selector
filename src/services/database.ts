@@ -29,17 +29,19 @@ export class DatabaseService {
     pageSize?: number
     status?: 'ACTIVE' | 'CLOSED' | 'AWARDED'
     area?: string
+    projectType?: string
     minBudget?: number
     maxBudget?: number
     search?: string
   }) {
-    const { page = 1, pageSize = 20, status, area, minBudget, maxBudget, search } = params
+    const { page = 1, pageSize = 20, status, area, projectType, minBudget, maxBudget, search } = params
     const offset = (page - 1) * pageSize
 
     // 构建查询条件
     const conditions = []
     if (status) conditions.push(eq(schema.tenderInfo.status, status))
     if (area) conditions.push(eq(schema.tenderInfo.area, area))
+    if (projectType) conditions.push(eq(schema.tenderInfo.projectType, projectType))
     if (minBudget) conditions.push(gte(schema.tenderInfo.budget, minBudget))
     if (maxBudget) conditions.push(lte(schema.tenderInfo.budget, maxBudget))
     if (search) {
